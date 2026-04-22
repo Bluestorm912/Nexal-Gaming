@@ -1,65 +1,36 @@
-export default async function Home() {
-  let posts: any[] = [];
+"use client";
 
-  try {
-    const res = await fetch(
-      "https://nexalgaming.co/wp-json/wp/v2/posts?per_page=10&_embed",
-      { cache: "no-store" }
-    );
+import { useEffect, useState } from "react";
 
-    if (!res.ok) {
-      console.error("Fetch failed:", res.status);
-      return <p>Failed to load posts.</p>;
+export default function Home() {
+  const [posts, setPosts] = useState<any[]>([]);
+
+  useEffect(() => {
+    async function fetchPosts() {
+      try {
+        const res = await fetch("/api/posts");
+        const data = await res.json();
+
+        setPosts(Array.isArray(data) ? data : []);
+      } catch (err) {
+        console.error(err);
+      }
     }
 
-    const text = await res.text();
-
-    console.log("RAW RESPONSE:", text);
-
-    const data = JSON.parse(text);
-
-    if (Array.isArray(data)) {
-      posts = data;
-    } else {
-      console.error("Unexpected data:", data);
-    }
-  } catch (err) {
-    console.error("SERVER ERROR:", err);
-    return <p>Error loading posts.</p>;
-  }
+    fetchPosts();
+  }, []);
 
   return (
-    <main style={{ padding: "20px", maxWidth: "900px", margin: "0 auto" }}>
+    <main style={{ padding: "20px" }}>
       <h1>Nexal Gaming</h1>
 
-      {posts.length === 0 && <p>No posts found.</p>}
+      {posts.length === 0 && <p>Loading posts...</p>}
 
-      {posts.map((post: any) => {
-        const image =
-          post._embedded?.["wp:featuredmedia"]?.[0]?.source_url;
-
-        return (
-          <div key={post.id} style={{ marginBottom: "40px" }}>
-            {image && (
-              <img
-                src={image}
-                alt=""
-                style={{ width: "100%", borderRadius: "10px" }}
-              />
-            )}
-
-            <h2
-              dangerouslySetInnerHTML={{ __html: post.title.rendered }}
-            />
-
-            <div
-              dangerouslySetInnerHTML={{
-                __html: post.excerpt?.rendered || "",
-              }}
-            />
-          </div>
-        );
-      })}
+      {posts.map((post: any) => (
+        <div key={post.id}>
+          <h2 dangerouslySetInnerHTML={{ __html: post.title.rendered }} />
+        </div>
+      ))}
     </main>
   );
 }
