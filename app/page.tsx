@@ -6,25 +6,30 @@ export default function Home() {
   const [posts, setPosts] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    async function fetchPosts() {
-      try {
-        const res = await fetch(
-          "https://nexalgaming.co/wp-json/wp/v2/posts?_embed"
-        );
+ useEffect(() => {
+  async function fetchPosts() {
+    try {
+      const res = await fetch(
+        "https://nexalgaming.co/wp-json/wp/v2/posts?status=publish"
+      );
 
-        const data = await res.json();
+      const data = await res.json();
 
-        setPosts(Array.isArray(data) ? data : []);
-      } catch (err) {
-        console.error("Error fetching posts:", err);
-      } finally {
-        setLoading(false);
+      console.log("WORDPRESS RESPONSE:", data);
+
+      if (!Array.isArray(data)) {
+        setPosts([]);
+        return;
       }
-    }
 
-    fetchPosts();
-  }, []);
+      setPosts(data);
+    } catch (err) {
+      console.error(err);
+    }
+  }
+
+  fetchPosts();
+}, []);
 
   return (
     <main style={{ padding: "20px", maxWidth: "900px", margin: "0 auto" }}>
