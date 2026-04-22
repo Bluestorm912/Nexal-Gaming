@@ -1,58 +1,33 @@
-"use client";
+export default async function Home() {
+  let posts = [];
 
-import { useEffect, useState } from "react";
+  try {
+    const res = await fetch(
+      "https://nexalgaming.co/wp-json/wp/v2/posts?per_page=10&_embed",
+      { cache: "no-store" }
+    );
 
-export default function Home() {
-  const [posts, setPosts] = useState<any[]>([]);
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    async function fetchPosts() {
-      try {
-        const res = await fetch(
-          "https://nexalgaming.co/wp-json/wp/v2/posts?per_page=10&_embed"
-        );
-
-        const data = await res.json();
-
-        console.log("WORDPRESS DATA:", data);
-
-        if (Array.isArray(data)) {
-          setPosts(data);
-        } else {
-          setPosts([]);
-        }
-      } catch (err) {
-        console.error(err);
-        setPosts([]);
-      } finally {
-        setLoading(false);
-      }
-    }
-
-    fetchPosts();
-  }, []);
+    posts = await res.json();
+  } catch (err) {
+    console.error("Server fetch error:", err);
+  }
 
   return (
     <main style={{ padding: "20px", maxWidth: "900px", margin: "0 auto" }}>
       <h1>Nexal Gaming</h1>
 
-      {loading && <p>Loading posts...</p>}
-
-      {!loading && posts.length === 0 && (
-        <p>No posts found (check WordPress data).</p>
-      )}
+      {posts.length === 0 && <p>No posts found.</p>}
 
       {posts.map((post: any) => {
-        const featuredImage =
+        const image =
           post._embedded?.["wp:featuredmedia"]?.[0]?.source_url;
 
         return (
           <div key={post.id} style={{ marginBottom: "40px" }}>
-            {featuredImage && (
+            {image && (
               <img
-                src={featuredImage}
-                alt="featured"
+                src={image}
+                alt=""
                 style={{ width: "100%", borderRadius: "10px" }}
               />
             )}
@@ -63,7 +38,7 @@ export default function Home() {
 
             <div
               dangerouslySetInnerHTML={{
-                __html: post.content?.rendered || "",
+                __html: post.excerpt.rendered,
               }}
             />
           </div>
