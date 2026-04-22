@@ -1,5 +1,5 @@
 export default async function Home() {
-  let posts = [];
+  let posts: any[] = [];
 
   try {
     const res = await fetch(
@@ -7,9 +7,25 @@ export default async function Home() {
       { cache: "no-store" }
     );
 
-    posts = await res.json();
+    if (!res.ok) {
+      console.error("Fetch failed:", res.status);
+      return <p>Failed to load posts.</p>;
+    }
+
+    const text = await res.text();
+
+    console.log("RAW RESPONSE:", text);
+
+    const data = JSON.parse(text);
+
+    if (Array.isArray(data)) {
+      posts = data;
+    } else {
+      console.error("Unexpected data:", data);
+    }
   } catch (err) {
-    console.error("Server fetch error:", err);
+    console.error("SERVER ERROR:", err);
+    return <p>Error loading posts.</p>;
   }
 
   return (
@@ -38,7 +54,7 @@ export default async function Home() {
 
             <div
               dangerouslySetInnerHTML={{
-                __html: post.excerpt.rendered,
+                __html: post.excerpt?.rendered || "",
               }}
             />
           </div>
